@@ -3,6 +3,7 @@ import com.mq.utils.JSONUtil;
 public class Test {
 
 	public static void main(String[] args) {
+		System.out.println("ssssss");
 		PayMessageVo payMessageVo=new PayMessageVo();
 		try {
 			String beanToJson = JSONUtil.beanToJson(payMessageVo);
