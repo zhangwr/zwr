@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.monitor.mapper.AppLoggerInfoMapper">
+	<resultMap id="BaseResultMap" type="com.monitor.entity.AppLoggerInfo">
+		<!-- WARNING - @mbg.generated -->
+		<id column="id" jdbcType="BIGINT" property="id" />
+		<id column="createDate" jdbcType="TIMESTAMP" property="createdate" />
+		<result column="msgType" jdbcType="INTEGER" property="msgtype" />
+		<result column="msgSource" jdbcType="INTEGER" property="msgsource" />
+		<result column="identityId" jdbcType="VARCHAR" property="identityid" />
+		<result column="userName" jdbcType="VARCHAR" property="username" />
+		<result column="ip" jdbcType="VARCHAR" property="ip" />
+		<result column="interfaceName" jdbcType="VARCHAR" property="interfacename" />
+		<result column="romVersion" jdbcType="VARCHAR" property="romversion" />
+		<result column="netStatus" jdbcType="VARCHAR" property="netstatus" />
+		<result column="cpuInfo" jdbcType="VARCHAR" property="cpuinfo" />
+		<result column="memorySize" jdbcType="VARCHAR" property="memorysize" />
+		<result column="diskSize" jdbcType="VARCHAR" property="disksize" />
+		<result column="loaction" jdbcType="VARCHAR" property="loaction" />
+		<result column="machineModel" jdbcType="VARCHAR" property="machinemodel" />
+		<result column="appVersion" jdbcType="VARCHAR" property="appversion" />
+		<result column="screenDensity" jdbcType="VARCHAR" property="screendensity" />
+		<result column="resolvingRate" jdbcType="VARCHAR" property="resolvingrate" />
+		<result column="requestType" jdbcType="INTEGER" property="requesttype" />
+		<result column="executeTime" jdbcType="DECIMAL" property="executetime" />
+		<result column="code" jdbcType="INTEGER" property="code" />
+		<result column="errorMsg" jdbcType="LONGVARCHAR" property="errormsg" />
+	</resultMap>
+	<cache />
+
+
+	<select id="getPage" parameterType="com.monitor.entity.AppLoggerInfo"
+		resultMap="BaseResultMap">
+		select * from app_logger_info
+		<where>
+			<if test="msgsource!=null">
+				msgSource=#{msgsource}
+			</if>
+		</where>
+	</select>
+
+</mapper>
