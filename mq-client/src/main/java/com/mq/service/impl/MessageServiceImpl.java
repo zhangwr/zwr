@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -12,8 +13,8 @@ import org.apache.commons.pool2.ObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.mq.commons.Constant;
 import com.mq.commons.Constant.Queues;
+import com.mq.commons.Constant.Topics;
 import com.mq.handler.MessageHandler;
 import com.mq.quene.RabbitConnection;
 import com.mq.quene.SubscribeMsgCallback;
@@ -58,7 +59,6 @@ public class MessageServiceImpl implements IMessageService {
 	}
 
 	public MessageServiceImpl(Queue<ObjectPool<RabbitConnection>> objectPoolPools, PropertiesFileUtil pf) {
-		// this.objectPools = objectPoolPools;
 		this.initService(objectPoolPools);
 	}
 
@@ -77,6 +77,8 @@ public class MessageServiceImpl implements IMessageService {
 			Channel channel = wrapConn.getChannel();
 			// 初始化所有队列
 			initQueues(channel);
+			// 初始化所有主题
+			initTopics(channel);
 		} catch (Exception e) {
 			LOG.error("初始化队列信息失败 {}", e);
 			throw new RuntimeException("初始化队列信息失败  ", e);
@@ -113,12 +115,32 @@ public class MessageServiceImpl implements IMessageService {
 		}
 	}
 
+	private void initTopics(Channel channel) throws IOException, IllegalArgumentException, IllegalAccessException {
+		Class<?> clazz = Topics.class;
+		Field[] fields = clazz.getFields();
+		if (fields != null) {
+			LOG.info("初始化主题信息....");
+			for (Field field : fields) {
+				Object topic = null;
+				if ((topic = field.get(null)) == null) {
+					LOG.debug("初始化主题信息[{}]队列名称为空", field.getName());
+					continue;
+				}
+				String tmp = topic.toString();
+				LOG.info("初始化主题: {}", tmp + "成功");
+				// 定义转换器为广播模式
+				channel.exchangeDeclare(tmp, "fanout");
+				channel.exchangeBind(tmp, EXCHANGE_NAME, tmp);
+			}
+		}
+
+	}
+
 	@Override
-	public void sendMessage(Object message) throws Throwable {
+	public void sendMessage(String queueName, Object message) throws Throwable {
 		if (message == null) {
 			throw new Throwable("发送的消息不能为空");
 		}
-		String queueName = Constant.Queues.MSG_SEND_QUEUE;
 		ObjectPool<RabbitConnection> connPool = this.nextPool();
 		RabbitConnection wrapConn = connPool.borrowObject();
 		Channel channel = wrapConn.getChannel();
@@ -171,10 +193,29 @@ public class MessageServiceImpl implements IMessageService {
 			this.subscribe(queueName, channel, handler);
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new Throwable("接收消息出错", e);
+			throw new Throwable("订阅队列[" + queueName + "]消息出错", e);
 		} finally {
 			returnObject(connPool, wrapConn);
 		}
+	}
+
+	@Override
+	public void subscribeTopic(String topicName, MessageHandler handler) throws Throwable {
+		String tempQueue = topicName + "." + UUID.randomUUID().toString();
+		RabbitConnection conn = null;
+		ObjectPool<RabbitConnection> connPool = this.nextPool();
+		try {
+			conn = connPool.borrowObject();
+			Channel channel = conn.getChannel();
+			channel.queueDeclare(tempQueue, false, false, true, null);
+			channel.queueBind(tempQueue, topicName, tempQueue);
+			this.subscribe(tempQueue, channel, handler);
+		} catch (Exception e) {
+			throw new Throwable("订阅主题[" + topicName + "]消息出错", e);
+		} finally {
+			returnObject(connPool, conn);
+		}
+
 	}
 
 	private void subscribe(String queueName, Channel channel, final MessageHandler handler) throws IOException {

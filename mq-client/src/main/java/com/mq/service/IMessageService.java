@@ -1,12 +1,6 @@
 package com.mq.service;
 
-import java.util.Queue;
-
-import org.apache.commons.pool2.ObjectPool;
-
 import com.mq.handler.MessageHandler;
-import com.mq.quene.RabbitConnection;
-import com.mq.service.impl.MessageServiceImpl;
 
 /**
  * 队列服务接口
@@ -14,24 +8,13 @@ import com.mq.service.impl.MessageServiceImpl;
  *
  */
 public interface IMessageService {
-	
-	/**
-	 * 初始化连接
-	 * Description:
-	 *  @return
-	 *  MessageServiceImpl
-	 * @author zhangwr
-	 * @date 2017年5月2日下午2:10:22
-	 */
-	public MessageServiceImpl initService(Queue<ObjectPool<RabbitConnection>> objectPools);
-
 	/**
 	 * 发送信息
 	 * 
 	 * @param queueName
 	 * @param message
 	 */
-	public void sendMessage(Object message) throws Throwable;
+	public void sendMessage(String queueName, Object message) throws Throwable;
 
 	/**
 	 * 接收消息
@@ -55,9 +38,23 @@ public interface IMessageService {
 	 * 
 	 * @param queueName
 	 * @param handler
-	 *             
+	 * 
 	 * @throws GridyException
 	 */
 	public void subscribeQueue(String queueName, MessageHandler handler) throws Throwable;
+
+	/**
+	 * 订阅Topic
+	 * <p>
+	 * 时时消费，多个客户端都会消费
+	 * <p>
+	 * 当Topic中有消息时, 执行MessageHandler
+	 * </p>
+	 * 
+	 * @param topicName
+	 * @param handler
+	 *            消息处理器, 如果handle抛出异常, 消息不会被消费掉。
+	 */
+	public void subscribeTopic(String topicName, MessageHandler handler) throws Throwable;
 
 }

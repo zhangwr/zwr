@@ -59,7 +59,6 @@ public class MessageServiceFactory {
 				LOG.info("创建 {} 连接池", host);
 				ConnectionFactory connectionFactory = new ConnectionFactory();
 				connectionFactory.setAutomaticRecoveryEnabled(true);
-				System.out.println(pf.getInt("mq.port"));
 				connectionFactory.setPort(pf.getInt("mq.port"));
 				connectionFactory.setUsername(pf.getString("mq.username"));
 				connectionFactory.setPassword(pf.getString("mq.password"));
